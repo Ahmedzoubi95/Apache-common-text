@@ -1,0 +1,56 @@
+<!-- Add to pom.xml under <build><plugins> --> 
+<plugin> 
+<groupId>com.github.spotbugs</groupId> 
+<artifactId>spotbugs-maven-plugin</artifactId> 
+<version>4.8.2.0</version> 
+<configuration> 
+        <plugins> 
+            <plugin> 
+                <groupId>com.h3xstream.findsecbugs</groupId> 
+                <artifactId>findsecbugs-plugin</artifactId> 
+                <version>1.12.0</version> 
+            </plugin> 
+        </plugins> 
+        <effort>Max</effort> 
+        <threshold>Low</threshold> 
+        <failOnError>true</failOnError> 
+        <includeFilterFile>security-include.xml</includeFilterFile> 
+        <excludeFilterFile>security-exclude.xml</excludeFilterFile> 
+        <plugins> 
+            <plugin> 
+                <groupId>com.h3xstream.findsecbugs</groupId> 
+                <artifactId>findsecbugs-plugin</artifactId> 
+                <version>1.12.0</version> 
+            </plugin> 
+        </plugins> 
+    </configuration> 
+    <executions> 
+        <execution> 
+            <goals> 
+                <goal>check</goal> 
+            </goals> 
+        </execution> 
+    </executions> 
+</plugin> 
+
+<!-- security-include.xml --> 
+<FindBugsFilter> 
+    <Match> 
+        <Bug category="SECURITY"/> 
+    </Match> 
+    <Match> 
+        <Package name="org.apache.commons.text"/> 
+        <Bug code="SECWTM,SECPTI,SECIC,SECHOC"/> 
+    </Match> 
+</FindBugsFilter> 
+ 
+<!-- security-exclude.xml --> 
+<FindBugsFilter> 
+    <Match> 
+        <Class name="~.*Test$"/> 
+        <Bug category="SECURITY"/> 
+    </Match> 
+</FindBugsFilter> 
+
+mvn spotbugs:check 
+mvn spotbugs:gui # For visual report 
