@@ -1,0 +1,71 @@
+<plugin> 
+<groupId>org.jacoco</groupId> 
+<artifactId>jacoco-maven-plugin</artifactId> 
+<version>${commons.jacoco.version}</version> 
+<executions> 
+<!-- Prepares the property pointing to the JaCoCo runtime agent --> 
+        <execution> 
+            <id>prepare-agent</id> 
+            <goals> 
+                <goal>prepare-agent</goal> 
+            </goals> 
+        </execution> 
+         
+        <!-- Ensures that the code coverage report is created after tests run --> 
+        <execution> 
+            <id>report</id> 
+            <phase>test</phase> 
+            <goals> 
+                <goal>report</goal> 
+            </goals> 
+        </execution> 
+         
+        <!-- Enforces coverage checks --> 
+        <execution> 
+            <id>check</id> 
+            <goals> 
+                <goal>check</goal> 
+            </goals> 
+            <configuration> 
+                <rules> 
+                    <rule> 
+                        <element>BUNDLE</element> 
+                        <limits> 
+                            <limit> 
+                                <counter>CLASS</counter> 
+                                <value>COVEREDRATIO</value> 
+                                <minimum>${commons.jacoco.classRatio}</minimum> 
+                            </limit> 
+                            <limit> 
+                                <counter>INSTRUCTION</counter> 
+                                <value>COVEREDRATIO</value> 
+                                <minimum>${commons.jacoco.instructionRatio}</minimum> 
+                            </limit> 
+                            <limit> 
+                                <counter>METHOD</counter> 
+                                <value>COVEREDRATIO</value> 
+                                <minimum>${commons.jacoco.methodRatio}</minimum> 
+                            </limit> 
+                            <limit> 
+                                <counter>BRANCH</counter> 
+                                <value>COVEREDRATIO</value> 
+                                <minimum>${commons.jacoco.branchRatio}</minimum> 
+                            </limit> 
+                            <limit> 
+                                <counter>COMPLEXITY</counter> 
+                                <value>COVEREDRATIO</value> 
+                                <minimum>${commons.jacoco.complexityRatio}</minimum> 
+                            </limit> 
+                            <limit> 
+                                <counter>LINE</counter> 
+                                <value>COVEREDRATIO</value> 
+                                <minimum>${commons.jacoco.lineRatio}</minimum> 
+                            </limit> 
+                        </limits> 
+                    </rule> 
+                </rules> 
+                <haltOnFailure>${commons.jacoco.haltOnFailure}</haltOnFailure> 
+            </configuration> 
+        </execution> 
+    </executions> 
+</plugin>
