@@ -1,1 +1,190 @@
-
+// 
+// Source code recreated from a .class file by IntelliJ IDEA 
+// (powered by FernFlower decompiler) 
+// 
+package org.apache.commons.text.jmh; 
+import java.math.BigDecimal; 
+import java.math.RoundingMode; 
+import java.text.DecimalFormat; 
+import java.util.Objects; 
+import java.util.concurrent.TimeUnit; 
+import java.util.function.DoubleFunction; 
+import org.apache.commons.rng.UniformRandomProvider; 
+import org.apache.commons.rng.simple.RandomSource; 
+import org.apache.commons.text.numbers.DoubleFormat; 
+import org.openjdk.jmh.annotations.Benchmark; 
+import org.openjdk.jmh.annotations.BenchmarkMode; 
+import org.openjdk.jmh.annotations.Fork; 
+import org.openjdk.jmh.annotations.Level; 
+import org.openjdk.jmh.annotations.Measurement; 
+import org.openjdk.jmh.annotations.Mode; 
+import org.openjdk.jmh.annotations.OutputTimeUnit; 
+import org.openjdk.jmh.annotations.Param; 
+import org.openjdk.jmh.annotations.Scope; 
+import org.openjdk.jmh.annotations.Setup; 
+import org.openjdk.jmh.annotations.State; 
+import org.openjdk.jmh.annotations.Warmup; 
+import org.openjdk.jmh.infra.Blackhole; 
+ 
+@BenchmarkMode({Mode.AverageTime}) 
+@OutputTimeUnit(TimeUnit.NANOSECONDS) 
+@Warmup( 
+    iterations = 5, 
+    time = 1, 
+    timeUnit = TimeUnit.SECONDS 
+) 
+@Measurement( 
+    iterations = 5, 
+    time = 1, 
+    timeUnit = TimeUnit.SECONDS 
+) 
+@Fork( 
+    value = 1, 
+    jvmArgs = {"-server", "-Xms512M", "-Xmx512M"} 
+) 
+public class DoubleFormatPerformance { 
+    private static final String PLAIN_PATTERN = "0.0##"; 
+    private static final String PLAIN_GROUPED_PATTERN = "#,##0.0##"; 
+    private static final String SCI_PATTERN = "0.0##E0"; 
+    private static final String ENG_PATTERN = "##0.0##E0"; 
+ 
+    public DoubleFormatPerformance() { 
+    } 
+ 
+    private static double randomDouble(int minExp, int maxExp, UniformRandomProvider rng) { 
+        long mask = -9218868437227405313L; 
+        long bits = rng.nextLong() & -9218868437227405313L; 
+        long exp = (long)(rng.nextInt(maxExp - minExp + 1) + minExp + 1023); 
+        return Double.longBitsToDouble(bits | exp << 52); 
+    } 
+ 
+    private static double[] randomDoubleArray(int len, int minExp, int maxExp, 
+UniformRandomProvider rng) { 
+        double[] arr = new double[len]; 
+ 
+        for(int i = 0; i < arr.length; ++i) { 
+            arr[i] = randomDouble(minExp, maxExp, rng); 
+        } 
+ 
+        return arr; 
+    } 
+ 
+    private static <T> void runDoubleFunction(DoubleInput input, Blackhole bh, 
+DoubleFunction<T> fn) { 
+        for(double d : input.getInput()) { 
+            bh.consume(fn.apply(d)); 
+        } 
+ 
+    } 
+ 
+    @Benchmark 
+    public void baseline(DoubleInput input, Blackhole bh) { 
+        runDoubleFunction(input, bh, (d) -> "0.0"); 
+    } 
+ 
+    @Benchmark 
+    public void bigDecimal(DoubleInput input, Blackhole bh) { 
+        DoubleFunction<String> fn = (d) -> BigDecimal.valueOf(d).setScale(3, 
+RoundingMode.HALF_EVEN).stripTrailingZeros().toString(); 
+        runDoubleFunction(input, bh, fn); 
+    } 
+ 
+    @Benchmark 
+    public void decimalFormatEngineering(DoubleInput input, Blackhole bh) { 
+        DecimalFormat fmt = new DecimalFormat("##0.0##E0"); 
+        Objects.requireNonNull(fmt); 
+        runDoubleFunction(input, bh, fmt::format); 
+    } 
+ 
+    @Benchmark 
+    public void decimalFormatPlain(DoubleInput input, Blackhole bh) { 
+        DecimalFormat fmt = new DecimalFormat("0.0##"); 
+        Objects.requireNonNull(fmt); 
+        runDoubleFunction(input, bh, fmt::format); 
+    } 
+ 
+    @Benchmark 
+    public void decimalFormatPlainGrouped(DoubleInput input, Blackhole bh) { 
+        DecimalFormat fmt = new DecimalFormat("#,##0.0##"); 
+        Objects.requireNonNull(fmt); 
+        runDoubleFunction(input, bh, fmt::format); 
+    } 
+ 
+    @Benchmark 
+    public void decimalFormatScientific(DoubleInput input, Blackhole bh) { 
+        DecimalFormat fmt = new DecimalFormat("0.0##E0"); 
+        Objects.requireNonNull(fmt); 
+        runDoubleFunction(input, bh, fmt::format); 
+    } 
+ 
+    @Benchmark 
+    public void doubleFormatEngineering(DoubleInput input, Blackhole bh) { 
+        runDoubleFunction(input, bh, 
+DoubleFormat.ENGINEERING.builder().maxPrecision(6).alwaysIncludeExponent(true).get()); 
+    } 
+ 
+    @Benchmark 
+    public void doubleFormatPlain(DoubleInput input, Blackhole bh) { 
+        runDoubleFunction(input, bh, DoubleFormat.PLAIN.builder().minDecimalExponent(
+3).get()); 
+    } 
+ 
+    @Benchmark 
+    public void doubleFormatPlainGrouped(DoubleInput input, Blackhole bh) { 
+        runDoubleFunction(input, bh, DoubleFormat.PLAIN.builder().minDecimalExponent(
+3).groupThousands(true).get()); 
+    } 
+ 
+    @Benchmark 
+    public void doubleFormatScientific(DoubleInput input, Blackhole bh) { 
+        runDoubleFunction(input, bh, 
+DoubleFormat.SCIENTIFIC.builder().maxPrecision(4).alwaysIncludeExponent(true).get()); 
+    } 
+ 
+    @Benchmark 
+    public void doubleToString(DoubleInput input, Blackhole bh) { 
+        runDoubleFunction(input, bh, Double::toString); 
+    } 
+ 
+    @Benchmark 
+    public void stringFormat(DoubleInput input, Blackhole bh) { 
+        runDoubleFunction(input, bh, (d) -> String.format("%f", d)); 
+    } 
+ 
+    @State(Scope.Thread) 
+    public static class DoubleInput { 
+        @Param({"10000"}) 
+        private int size; 
+        @Param({"-100"}) 
+        private int minExp; 
+        @Param({"100"}) 
+        private int maxExp; 
+        private double[] input; 
+ 
+        public DoubleInput() { 
+        } 
+ 
+        public double[] getInput() { 
+            return this.input; 
+        } 
+ 
+        @Setup(Level.Iteration) 
+        public void setup() { 
+            this.input = DoubleFormatPerformance.randomDoubleArray(this.size, this.minExp, 
+this.maxExp, RandomSource.XO_RO_SHI_RO_128_PP.create()); 
+        } 
+    } 
+} 
+ 
+<dependency> 
+<groupId>org.openjdk.jmh</groupId> 
+<artifactId>jmh-core</artifactId> 
+<version>1.37</version> 
+<scope>test</scope> 
+</dependency> 
+<dependency> 
+<groupId>org.openjdk.jmh</groupId> 
+<artifactId>jmh-generator-annprocess</artifactId> 
+<version>1.37</version> 
+<scope>test</scope> 
+</dependency>
