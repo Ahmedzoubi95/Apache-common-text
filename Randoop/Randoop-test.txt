@@ -1,0 +1,23 @@
+wget https://github.com/randoop/randoop/releases/download/v4.3.2/randoop-all-4.3.2.jar 
+export RANDOOP_JAR=/path/to/randoop-all-4.3.2.jar 
+#!/bin/bash 
+# Compile Commons Text 
+mvn clean package 
+# Set Classpath 
+COMMONS_TEXT_JAR="target/commons-text-1.13.1-SNAPSHOT.jar" 
+COMMONS_LANG_JAR="$HOME/.m2/repository/org/apache/commons/commons
+lang3/3.17.0/commons-lang3-3.17.0.jar" 
+# Randoop Configuration 
+TIMEOUT=100 
+METHOD_COUNT=3000 
+OUTPUT_LIMIT=2000 
+# Generate Tests 
+java -classpath ${RANDOOP_JAR}:${COMMONS_TEXT_JAR}:${COMMONS_LANG_JAR} \ 
+randoop.main.Main gentests \ --testclass=org.apache.commons.text.StringEscapeUtils \ --testclass=org.apache.commons.text.StringTokenizer \ --testclass=org.apache.commons.text.TextStringBuilder \ --junit-output-dir=src/test/java \ --regression-test-basename=RandoopTest \ --time-limit=$TIMEOUT \ --method-selection=UNIFORM \ --output-limit=$OUTPUT_LIMIT \ 
+--omit-methods=toString \ --junit-reflection-allowed=false \ --specifications-file=randoop-specs.txt \ --log=randoop-log.txt 
+# Move Generated Tests 
+mkdir -p src/test/java/org/apache/commons/text/randoop 
+mv src/test/java/RandoopTest*.java src/test/java/org/apache/commons/text/randoop/ 
+org.apache.commons.text.StringEscapeUtils.escapeJava(java.lang.String) throws null -> false 
+org.apache.commons.text.StringTokenizer.reset() throws null -> false 
+mvn test -Dtest=org.apache.commons.text.randoop.*Test
